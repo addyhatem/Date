@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Question for you...</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&display=swap" rel="stylesheet">
+    <style>
+		body {
+			margin: 0;
+			padding: 0;
+			font-family: "Caveat", cursive;
+			background-color: #001a33;
+			color: #FFB6C1;
+			overflow: hidden;
+			text-align: center;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			height: 100vh;
+			-webkit-font-smoothing: antialiased;
+		}
+
+        /* --- Pastel Pink Starfield Background --- */
+        .star-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1; 
+        }
+
+        .star {
+            position: absolute;
+            color: #FFB6C1; 
+            font-size: 16px; 
+            opacity: 0.4; 
+            text-shadow: 0 0 8px #FFB6C1;
+        }
+
+        @keyframes star-fade-drift {
+            0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.3; }
+            50% { transform: translate3d(12px, -12px, 0); opacity: 0.9; }
+        }
+
+        .star-animated {
+            animation: star-fade-drift 6s ease-in-out infinite;
+        }
+
+        /* --- Content Layout --- */
+        .page {
+            display: none;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10; 
+        }
+
+        .active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+		h1 {
+			font-family: "Caveat", cursive;
+			font-size: 24px;
+			font-weight: 700;
+			letter-spacing: 0.5px;
+			line-height: 1.3;
+			margin-bottom: 10px;
+			color: #FFB6C1;
+			padding: 0 15px;
+			z-index: 10;
+		}
+
+        /* --- Interaction Area (Photo + Buttons) --- */
+        .interaction-area {
+            position: relative;
+            width: 100%;
+            max-width: 220px; 
+            margin: 20px auto 0 auto; 
+        }
+
+        .pointing-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 20px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            margin-top: 65px; 
+        }
+
+        .floating-btn {
+            position: absolute;
+            top: 12px; 
+            padding: 8px 20px; 
+            font-size: 15px;
+            font-weight: bold;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #btn-yes {
+			font-family: "Caveat", cursive;
+			font-size: 18px;
+            left: 5px; 
+            background-color: #FFB6C1; 
+            color: #001a33; 
+            z-index: 12;
+            transition: transform 0.1s;
+        }
+
+        #btn-no {
+			font-family: "Caveat", cursive;
+			font-size: 18px;
+            right: 5px; 
+            background-color: #555555; 
+            color: #FFB6C1; 
+            z-index: 15;
+            transition: none; 
+        }
+
+        /* --- Success Screen Overlay --- */
+        .success-wrapper {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 26, 51, 0.98); 
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .success-active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .success-image-ref {
+            max-width: 85%;
+            max-height: 320px;
+            margin-top: 20px;
+            border: 3px solid #FFB6C1; 
+            border-radius: 12px;
+        }
+
+        .message {
+            font-size: 30px;
+            color: #FFB6C1;
+            font-weight: bold;
+        }
+
+        .after-message {
+            color: #FFB6C1;
+            font-size: 16px;
+            margin-top: 15px;
+            padding: 0 20px;
+            opacity: 0.9;
+        }
+
+        /* --- Page 2 Styles (Fashion Choices Side-by-Side) --- */
+.options-grid {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 95vw;
+    box-sizing: border-box;
+}
+
+.option-button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: none;              /* removed pink border */
+    border-radius: 0;          /* removed rounded frame */
+    text-decoration: none;
+    overflow: visible;
+    background: transparent;   /* removed black background */
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.option-button img {
+    width: 100%;
+    height: 220px;
+    object-fit: contain;       /* shows entire PNG */
+    object-position: center;
+    background: transparent;
+    display: block;
+}
+
+.option-text-overlay {
+    width: 100%;
+    background-color: rgba(0, 26, 51, 0.95);
+    color: #FFB6C1;
+    padding: 8px 4px;
+    box-sizing: border-box;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    border-top: none;          /* removed line above text */
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+    </style>
+</head>
+<body>
+
+    <div id="starContainer" class="star-container"></div>
+
+    <div id="page1" class="page active">
+        <h1>Saja, will you go on a date with me?</h1>
+        
+        <div class="interaction-area">
+            <img src="1.png" alt="Me pointing" class="pointing-img" onerror="this.src='https://via.placeholder.com/320x320?text=Save+image+as+pointing.jpg'">
+            
+            <button id="btn-yes" class="floating-btn">Yes</button>
+            <button id="btn-no" class="floating-btn">No</button>
+        </div>
+
+        <div id="successWrapper" class="success-wrapper">
+            <div id="success-message" class="message">Let's gooooo! 🚀</div>
+            <img src="57309.jpg" alt="Designs Reference" class="success-image-ref" onerror="this.src='https://via.placeholder.com/300x200?text=Save+image+as+57309.jpg'">
+        </div>
+    </div>
+
+    <div id="page2" class="page">
+        <h1 style="margin-bottom: 5px;">Click on your favourite :)</h1>
+        
+        <div class="options-grid">
+            <a href="https://maps.app.goo.gl/WghTHyGNFLQwRJvM8" target="_blank" class="option-button">
+                <img src="2.png" alt="Design 2">
+                <div class="option-text-overlay">
+                    I
+                </div>
+            </a>
+
+            <a href="GOOGLE_MAPS_LINK_2" target="_blank" class="option-button">
+                <img src="3.png" alt="Design 3">
+                <div class="option-text-overlay">
+                    II
+                </div>
+            </a>
+
+            <a href="GOOGLE_MAPS_LINK_3" target="_blank" class="option-button">
+                <img src="4.png" alt="Design 4" onerror="this.src='4.jpg'">
+                <div class="option-text-overlay">
+                    III
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const btnNo = document.getElementById('btn-no');
+        const btnYes = document.getElementById('btn-yes');
+        const page1 = document.getElementById('page1');
+        const page2 = document.getElementById('page2');
+        const successWrapper = document.getElementById('successWrapper');
+        const starContainer = document.getElementById('starContainer');
+
+        function initStars() {
+            for (let i = 0; i < 40; i++) {
+                const star = document.createElement('div');
+                star.className = 'star star-animated';
+                star.innerText = Math.random() > 0.5 ? '✦' : '★';
+                star.style.left = `${Math.random() * 95}vw`;
+                star.style.top = `${Math.random() * 95}vh`;
+                star.style.animationDelay = `${Math.random() * -6}s`;
+                starContainer.appendChild(star);
+            }
+        }
+        
+        initStars();
+
+        const moveButton = (e) => {
+            e.preventDefault(); 
+            btnNo.style.position = 'fixed';
+            btnNo.style.right = 'auto'; 
+            
+            const btnWidth = btnNo.offsetWidth;
+            const btnHeight = btnNo.offsetHeight;
+            const safePadding = 35; 
+
+            const maxLeft = window.innerWidth - btnWidth - safePadding;
+            const maxTop = window.innerHeight - btnHeight - safePadding;
+            
+            const randomX = Math.random() * (maxLeft - safePadding) + safePadding;
+            const randomY = Math.random() * (maxTop - safePadding) + safePadding;
+            
+            btnNo.style.left = `${randomX}px`;
+            btnNo.style.top = `${randomY}px`;
+        };
+
+        btnNo.addEventListener('touchstart', moveButton, { passive: false });
+        btnNo.addEventListener('click', moveButton);
+
+        // Success Transition with Realistic Night Fireworks
+        btnYes.addEventListener('click', () => {
+            const duration = 3000;
+            const animationEnd = Date.now() + duration;
+
+            // Custom brilliant fireworks colors
+            const fireworkColors = ['#FFD700', '#FF1493', '#00BFFF', '#FF3333', '#32CD32'];
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const randomX = Math.random();
+                const randomY = Math.random() * 0.4 + 0.1; 
+
+                confetti({
+                    particleCount: 80,
+                    startVelocity: 35,
+                    spread: 360,
+                    ticks: 100,
+                    origin: { x: randomX, y: randomY },
+                    colors: fireworkColors,
+                    gravity: 0.4,       
+                    scalar: 0.8,        
+                    drift: 0,
+                    zIndex: 105
+                });
+            }, 350); 
+
+            successWrapper.classList.add('success-active');
+
+            setTimeout(() => {
+                page1.classList.remove('active');
+                successWrapper.classList.remove('success-active');
+                page2.classList.add('active');
+            }, 3500);
+        });
+    </script>
+</body>
+</html>
